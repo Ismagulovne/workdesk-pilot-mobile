@@ -235,8 +235,8 @@ const toShot = (n) => [Math.round(n.cx * scale), Math.round(n.cy * scale)];
 let field = await waitNode((n) => n.pkg === NOTES && n.cls === 'android.widget.EditText', 20000);
 if (!field) { check('«Тест-заметки» на экране после разрешения', false); finish(); }
 r = await call('left_click', { coordinate: toShot(field) });
-await sleep(500);
-field = dump().find((n) => n.pkg === NOTES && n.cls === 'android.widget.EditText');
+field = await waitNode((n) => n.pkg === NOTES && n.cls === 'android.widget.EditText' && n.focused, 6000)
+  || dump().find((n) => n.pkg === NOTES && n.cls === 'android.widget.EditText');
 check('касание по координатам снимка попало в поле', !r.isError && field && field.focused, textOf(r));
 
 r = await call('type', { text: 'Купить молоко' });
@@ -272,9 +272,12 @@ r = await call('left_click', { coordinate: toShot(testMain) });
 await sleep(500);
 check('касание обычной строки работает', !r.isError && !!(await waitNode(byText('Открыта база: TEST_MAIN'), 6000)), textOf(r));
 
+const before = dump().find((n) => n.pkg === NOTES && /^Строка \d+$/.test(n.text));
 r = await call('scroll', { coordinate: [200, 400], scroll_direction: 'down', scroll_amount: 5 });
-await sleep(700);
-check('прокрутка', !r.isError && !!dump().find((n) => /^Строка \d+$/.test(n.text) && n.y1 < 900), textOf(r));
+await sleep(1200);
+const after = before && dump().find((n) => n.pkg === NOTES && n.text === before.text);
+check('прокрутка', !r.isError && before && (!after || after.y1 < before.y1 - 50),
+  `${textOf(r)}; «${before?.text}» было y=${before?.y1}, стало ${after ? 'y=' + after.y1 : 'за краем'}`);
 
 r = await call('zoom', { region: [0, 0, 300, 300] });
 check('zoom', !r.isError && r.content.some((c) => c.type === 'image'), textOf(r));
