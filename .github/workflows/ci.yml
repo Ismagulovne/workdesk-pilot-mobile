@@ -12,8 +12,8 @@ jobs:
   bridge:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - name: Тесты моста (включая нагрузку и краш-тесты)
@@ -24,12 +24,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
       - name: Ключ подписи (только в своём репо, не в PR из форков)
         env:
           PILOT_KEYSTORE_BASE64: ${{ secrets.PILOT_KEYSTORE_BASE64 }}
@@ -52,7 +52,7 @@ jobs:
       - name: Удалить ключ
         if: always()
         run: rm -f "$RUNNER_TEMP/pilot.p12"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: WorkDeskAIPilot-apk
           path: |
