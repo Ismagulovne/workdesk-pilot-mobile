@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "wdpilot-mobile": {
+      "command": "node",
+      "args": ["C:/путь/к/workdesk-pilot-mobile/bridge/wdpilot-mobile.mjs", "--port", "8765"]
+    }
+  }
+}

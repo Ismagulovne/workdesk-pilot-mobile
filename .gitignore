@@ -1,0 +1,9 @@
+dist/
+android/.gradle/
+android/.gradle-home/
+android/build/
+android/app/build/
+android/local.properties
+*.jpg
+node_modules/
+docs/report-*.html

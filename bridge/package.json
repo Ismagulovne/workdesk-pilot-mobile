@@ -1,0 +1,12 @@
+{
+  "name": "wdpilot-mobile-bridge",
+  "version": "0.1.0",
+  "description": "WorkDesk AI Pilot для телефона: мост MCP на ПК (работает с Claude Code)",
+  "type": "module",
+  "private": true,
+  "license": "UNLICENSED",
+  "author": "Nurbolat Ismagulov <info@worktime.kz>",
+  "bin": { "wdpilot-mobile": "wdpilot-mobile.mjs" },
+  "engines": { "node": ">=22" },
+  "scripts": { "test": "node --test test/*.test.mjs" }
+}
