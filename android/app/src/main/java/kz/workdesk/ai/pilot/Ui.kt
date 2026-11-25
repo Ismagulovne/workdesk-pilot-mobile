@@ -27,9 +27,9 @@ class Ui(private val ctx: Context) {
     private val regular = Typeface.create("sans-serif", Typeface.NORMAL)
     private val bold = Typeface.create("sans-serif", Typeface.BOLD)
 
-    private fun round(fill: Int, radius: Int, stroke: Int? = null) = GradientDrawable().apply {
+    private fun round(fill: Int, radius: Int, stroke: Int? = null, strokeDp: Int = 1) = GradientDrawable().apply {
         setColor(fill); cornerRadius = dp(radius).toFloat()
-        if (stroke != null) setStroke(dp(if (stroke == c(R.color.wd_brand)) 2 else 1), stroke)
+        if (stroke != null) setStroke(dp(strokeDp), stroke)
     }
 
     private fun ripple(bg: GradientDrawable) =
@@ -76,6 +76,8 @@ class Ui(private val ctx: Context) {
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
         background = round(c(R.color.wd_brand_50), 999)
         setPadding(dp(12), dp(4), dp(12), dp(4))
+        layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            .apply { topMargin = dp(4) }
     }
 
     /** Карточка: surface, рамка border, скругление 14. */
@@ -90,8 +92,8 @@ class Ui(private val ctx: Context) {
     /** Основная кнопка .btn: brand, белый жирный текст, скругление 14. */
     fun primary(s: String, onClick: () -> Unit) = button(s, onClick, c(R.color.wd_brand), 0xFFFFFFFF.toInt(), c(R.color.wd_brand))
 
-    /** Вторичная кнопка: контур brand 2dp, текст brand. */
-    fun secondary(s: String, onClick: () -> Unit) = button(s, onClick, c(R.color.wd_surface), c(R.color.wd_link), c(R.color.wd_brand))
+    /** Вторичная кнопка, как на workdesk.kz: контур 2dp и текст цвета ссылки (brand, в тёмной теме #A996FF). */
+    fun secondary(s: String, onClick: () -> Unit) = button(s, onClick, c(R.color.wd_surface), c(R.color.wd_link), c(R.color.wd_link))
 
     private fun button(s: String, onClick: () -> Unit, fill: Int, fg: Int, stroke: Int) = TextView(ctx).apply {
         text = s; typeface = bold; setTextColor(fg); gravity = Gravity.CENTER
@@ -99,7 +101,7 @@ class Ui(private val ctx: Context) {
         isClickable = true; isFocusable = true
         minHeight = dp(48)
         setPadding(dp(22), dp(12), dp(22), dp(12))
-        background = ripple(round(fill, 14, stroke))
+        background = ripple(round(fill, 14, stroke, 2))
         setOnClickListener { onClick() }
         layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
             .apply { topMargin = dp(10) }
