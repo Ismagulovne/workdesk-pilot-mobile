@@ -44,6 +44,9 @@ jobs:
         env:
           PILOT_KEYSTORE_PASSWORD: ${{ secrets.PILOT_KEYSTORE_PASSWORD }}
         run: ./gradlew --no-daemon testDebugUnitTest lintDebug assembleDebug ${TASKS:-}
+      - name: Снимки экранов (Paparazzi) для сверки со стилем WorkDesk
+        working-directory: android
+        run: ./gradlew --no-daemon recordPaparazziDebug
       - name: Проверка подписи релиза
         if: env.TASKS == 'assembleRelease'
         run: |
@@ -59,4 +62,5 @@ jobs:
             android/app/build/outputs/apk/**/*.apk
             android/app/build/reports/lint-results-debug.*
             android/app/build/test-results/**/*.xml
+            android/app/src/test/snapshots/images/*.png
           retention-days: 14

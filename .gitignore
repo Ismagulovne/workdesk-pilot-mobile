@@ -7,3 +7,4 @@ android/local.properties
 *.jpg
 node_modules/
 docs/report-*.html
+android/app/src/test/snapshots/

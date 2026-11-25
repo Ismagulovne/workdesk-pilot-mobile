@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("app.cash.paparazzi") // снимки экранов на JVM для сверки со стилем WorkDesk (только тесты)
 }
 
 android {
