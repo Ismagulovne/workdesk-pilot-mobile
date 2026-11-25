@@ -80,7 +80,7 @@ jobs:
           script: |
             adb shell wm density ${{ matrix.density }} && adb shell wm size && sleep 3
             adb install -r -g apks/app/build/outputs/apk/debug/app-debug.apk && adb install -r -g apks/testapp/build/outputs/apk/debug/testapp-debug.apk
-            node tools/e2e/run.mjs --device "${{ matrix.name }}" --out "e2e-out" || (mkdir -p e2e-out && adb logcat -d -b main,system,crash Pilot:V E2E:S AndroidRuntime:V ActivityManager:I ActivityTaskManager:I AccessibilityManagerService:V '*:W' > e2e-out/logcat.txt; adb shell run-as kz.workdesk.ai.pilot sh -c 'cat files/journal/*.jsonl' > e2e-out/journal.jsonl; exit 1)
+            node tools/e2e/run.mjs --device "${{ matrix.name }}" --out "e2e-out" || (mkdir -p e2e-out && timeout 120 adb logcat -d -b main,system,crash Pilot:V E2E:S AndroidRuntime:V ActivityManager:I ActivityTaskManager:I AccessibilityManagerService:V '*:W' > e2e-out/logcat.txt; timeout 60 adb shell 'run-as kz.workdesk.ai.pilot sh -c "cat files/journal/*.jsonl"' < /dev/null > e2e-out/journal.jsonl; exit 1)
       - uses: actions/upload-artifact@v5
         if: always()
         with:
