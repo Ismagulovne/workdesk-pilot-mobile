@@ -113,7 +113,8 @@ try { sh(`pm grant ${PILOT} android.permission.POST_NOTIFICATIONS`); } catch { /
 sh(`am force-stop ${NOTES}`);
 sh(`pm clear ${PILOT}`);
 sh(`am start -W -n ${PILOT}/.MainActivity`);
-const agree = await waitNode(byText('Согласен, продолжить'));
+await waitNode(byText('Прежде чем начать'));
+const agree = await scrollTo(byText('Согласен, продолжить'));
 check('раскрытие информации показано до согласия', agree);
 shot('01-disclosure');
 if (agree) tap(agree);
@@ -142,7 +143,7 @@ hub = startHub({ port: 8765, host: '0.0.0.0', code: CODE, log: (s) => console.lo
 await hub.ready;
 sh(`am start -W -n ${PILOT}/.MainActivity`);
 await sleep(800);
-const connectBtn = await waitNode(byText('Подключить'), 8000);
+const connectBtn = await scrollTo(byText('Подключить'));
 const inputs = dump().filter((n) => n.pkg === PILOT && n.cls === 'android.widget.EditText' && connectBtn && n.y2 <= connectBtn.y1);
 if (inputs.length >= 2) {
   tap(inputs[0]); await sleep(300); sh(`input text ws://${HOST_IP}:8765/pilot`);
