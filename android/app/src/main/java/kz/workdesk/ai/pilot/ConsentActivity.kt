@@ -59,12 +59,14 @@ class ConsentActivity : Activity() {
             intent.getStringExtra(EXTRA_TEXT) ?: "", intent.getStringExtra(EXTRA_YES) ?: "Разрешить",
             onDeny = { answer(false) }, onAllow = { answer(true) })
         setContentView(root)
+        E2eProbe.attach(this)
     }
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() = answer(false)
 
     override fun onDestroy() {
+        E2eProbe.gone(this)
         if (isFinishing) { pending?.complete(false); pending = null }
         super.onDestroy()
     }

@@ -39,27 +39,29 @@ function shot(name) {
   } catch (e) { console.log('снимок не удался', e.message); }
 }
 
-/** Узлы uiautomator: text, desc, cls, pkg, bounds, focused. */
+/**
+ * Что сейчас видит «человек»: последние отчёты датчика E2E (отладочная сборка) по каждому окну с фокусом.
+ * uiautomator не используем: он приостанавливает службы специальных возможностей, то есть и исполнитель.
+ */
 function dump() {
-  for (let i = 0; i < 4; i++) {
-    try {
-      sh('uiautomator dump /sdcard/ui.xml >/dev/null 2>&1');
-      const xml = adb('exec-out', 'cat', '/sdcard/ui.xml');
-      const nodes = [];
-      for (const m of xml.matchAll(/<node ([^>]*?)\/?>/g)) {
-        const a = Object.fromEntries([...m[1].matchAll(/([\w-]+)="([^"]*)"/g)].map((x) => [x[1], x[2]]));
-        const b = (a.bounds || '').match(/\[(\d+),(\d+)\]\[(\d+),(\d+)\]/);
-        if (!b) continue;
-        const [x1, y1, x2, y2] = b.slice(1).map(Number);
-        nodes.push({ text: decode(a.text || ''), desc: decode(a['content-desc'] || ''), cls: a.class, pkg: a.package,
-          focused: a.focused === 'true', x1, y1, x2, y2, cx: (x1 + x2) >> 1, cy: (y1 + y2) >> 1 });
-      }
-      if (nodes.length) return nodes;
-    } catch { /* экран меняется — повторим */ }
+  const raw = execFileSync('adb', ['logcat', '-d', '-v', 'raw', '-s', 'E2E:I'], { encoding: 'utf8', maxBuffer: 64 << 20 });
+  const last = new Map();
+  for (const line of raw.split(/\r?\n/)) {
+    const m = line.match(/^([\w.]+)\|([\w.]+)\|([01])\|(\[.*\])\s*$/);
+    if (m) last.set(`${m[1]}|${m[2]}`, { pkg: m[1], focus: m[3] === '1', nodes: m[4] });
   }
-  return [];
+  const out = [];
+  for (const rep of last.values()) {
+    if (!rep.focus) continue;
+    let arr = [];
+    try { arr = JSON.parse(rep.nodes); } catch { continue; }
+    for (const n of arr) {
+      out.push({ text: n.t, hint: n.h || '', cls: n.e ? 'android.widget.EditText' : 'android.widget.TextView', pkg: rep.pkg,
+        focused: !!n.f, x1: n.x1, y1: n.y1, x2: n.x2, y2: n.y2, cx: (n.x1 + n.x2) >> 1, cy: (n.y1 + n.y2) >> 1 });
+    }
+  }
+  return out;
 }
-const decode = (s) => s.replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#10;/g, '\n');
 
 async function waitNode(pred, ms = 20000) {
   const end = Date.now() + ms;
@@ -112,6 +114,8 @@ console.log('Устройство:', JSON.stringify(info));
 try { sh(`pm grant ${PILOT} android.permission.POST_NOTIFICATIONS`); } catch { /* Android 11–12 */ }
 sh(`am force-stop ${NOTES}`);
 sh(`pm clear ${PILOT}`);
+try { sh(`pm grant ${PILOT} android.permission.POST_NOTIFICATIONS`); } catch { /* Android 11–12 */ }
+adb('logcat', '-c');
 sh(`am start -W -n ${PILOT}/.MainActivity`);
 await waitNode(byText('Прежде чем начать'));
 const agree = await scrollTo(byText('Согласен, продолжить'));

@@ -29,6 +29,7 @@ class MainActivity : Activity() {
             addView(ScrollView(this@MainActivity).apply { addView(root) },
                 LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
         })
+        E2eProbe.attach(this)
     }
 
     override fun onResume() {
@@ -59,7 +60,13 @@ class MainActivity : Activity() {
 
     private fun controls() {
         val svc = PilotService.instance
-        if (Build.VERSION.SDK_INT >= 33) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+        // Уведомление со «Стоп»: спрашиваем один раз и только если разрешения нет (раньше спрашивали на каждой перерисовке).
+        if (Build.VERSION.SDK_INT >= 33 && !prefs.getBoolean("asked_notifications", false) &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            prefs.edit().putBoolean("asked_notifications", true).apply()
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
+        }
 
         val service = ui.card()
         service.addView(ui.heading("1. Служба"))

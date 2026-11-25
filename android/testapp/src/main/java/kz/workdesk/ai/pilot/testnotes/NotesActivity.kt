@@ -55,5 +55,6 @@ class NotesActivity : Activity() {
         root.addView(opened)
         for (i in 1..40) root.addView(TextView(this).apply { text = "Строка $i"; textSize = 16f; setPadding(0, dp(8), 0, dp(8)) })
         setContentView(ScrollView(this).apply { addView(root) })
+        E2eProbe.attach(this)
     }
 }
