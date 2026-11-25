@@ -39,29 +39,61 @@ function shot(name) {
   } catch (e) { console.log('снимок не удался', e.message); }
 }
 
+/** Последний полный отчёт по каждому окну: Map(pkg|class → { pkg, focus, id, nodes[] }). */
+function reports() {
+  const raw = execFileSync('adb', ['logcat', '-d', '-v', 'raw', '-s', 'E2E:I'], { encoding: 'utf8', maxBuffer: 64 << 20 });
+  const parts = new Map();
+  for (const line of raw.split(/\r?\n/)) {
+    const m = line.match(/^([\w.]+)\|([\w.]+)\|([01])\|(\d+)\|(\d+)\|(\d+)\|(\[.*\])\s*$/);
+    if (!m) continue;
+    const key = `${m[1]}|${m[2]}|${m[4]}`;
+    if (!parts.has(key)) parts.set(key, { win: `${m[1]}|${m[2]}`, pkg: m[1], focus: m[3] === '1', id: +m[4], n: +m[6], chunks: [] });
+    try { parts.get(key).chunks[+m[5]] = JSON.parse(m[7]); } catch { /* обрезанная строка — отчёт неполный */ }
+  }
+  const last = new Map();
+  for (const p of parts.values()) {
+    if (p.chunks.filter(Boolean).length !== p.n) continue;
+    const prev = last.get(p.win);
+    if (!prev || prev.id < p.id) last.set(p.win, { ...p, nodes: p.chunks.flat() });
+  }
+  return last;
+}
+
+const seen = new Map();
+const pause = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
 /**
- * Что сейчас видит «человек»: последние отчёты датчика E2E (отладочная сборка) по каждому окну с фокусом.
+ * Что сейчас видит «человек»: отчёты датчика E2E (отладочная сборка) по окнам с фокусом.
+ * Ждёт отчёт новее предыдущего вызова (датчик пишет каждые 400 мс), чтобы не читать устаревший экран.
  * uiautomator не используем: он приостанавливает службы специальных возможностей, то есть и исполнитель.
  */
 function dump() {
-  const raw = execFileSync('adb', ['logcat', '-d', '-v', 'raw', '-s', 'E2E:I'], { encoding: 'utf8', maxBuffer: 64 << 20 });
-  const last = new Map();
-  for (const line of raw.split(/\r?\n/)) {
-    const m = line.match(/^([\w.]+)\|([\w.]+)\|([01])\|(\[.*\])\s*$/);
-    if (m) last.set(`${m[1]}|${m[2]}`, { pkg: m[1], focus: m[3] === '1', nodes: m[4] });
+  let last = reports();
+  for (let i = 0; i < 12; i++) {
+    const stale = [...last.values()].some((r) => r.focus && (seen.get(r.win) ?? -1) >= r.id);
+    if (!stale) break;
+    pause(200);
+    last = reports();
   }
   const out = [];
   for (const rep of last.values()) {
+    seen.set(rep.win, rep.id);
     if (!rep.focus) continue;
-    let arr = [];
-    try { arr = JSON.parse(rep.nodes); } catch { continue; }
-    for (const n of arr) {
+    for (const n of rep.nodes) {
       out.push({ text: n.t, hint: n.h || '', cls: n.e ? 'android.widget.EditText' : 'android.widget.TextView', pkg: rep.pkg,
         focused: !!n.f, x1: n.x1, y1: n.y1, x2: n.x2, y2: n.y2, cx: (n.x1 + n.x2) >> 1, cy: (n.y1 + n.y2) >> 1 });
     }
   }
   return out;
 }
+
+function swipe(down) {
+  const size = sh('wm size').match(/(\d+)x(\d+)\s*$/);
+  const w = size ? +size[1] : 1080; const h = size ? +size[2] : 2340;
+  const [a, b] = down ? [0.3, 0.8] : [0.75, 0.3];
+  sh(`input swipe ${w >> 1} ${Math.round(h * a)} ${w >> 1} ${Math.round(h * b)} 300`);
+}
+async function scrollTop() { for (let i = 0; i < 5; i++) { swipe(true); await sleep(300); } await sleep(500); }
 
 async function waitNode(pred, ms = 20000) {
   const end = Date.now() + ms;
@@ -126,7 +158,9 @@ sh(`settings put secure enabled_accessibility_services ${PILOT}/${PILOT}.PilotSe
 sh('settings put secure accessibility_enabled 1');
 let linkHead = null;
 for (let i = 0; i < 20 && !linkHead; i++) {
-  sh('input keyevent 3'); await sleep(500); // домой и обратно — экран перерисуется в onResume
+  sh(`settings put secure enabled_accessibility_services ${PILOT}/${PILOT}.PilotService`);
+  sh('settings put secure accessibility_enabled 1');
+  sh('input keyevent 3'); await sleep(800); // домой и обратно — экран перерисуется в onResume
   sh(`am start -W -n ${PILOT}/.MainActivity`);
   linkHead = await waitNode(byText('2. Подключение к ПК'), 3000);
 }
@@ -150,6 +184,7 @@ await hub.ready;
 sh('input keyevent 3'); await sleep(500);
 sh(`am start -W -n ${PILOT}/.MainActivity`);
 await sleep(800);
+await scrollTop();
 const connectBtn = await scrollTo(byText('Подключить'));
 const inputs = dump().filter((n) => n.pkg === PILOT && n.cls === 'android.widget.EditText' && connectBtn && n.y2 <= connectBtn.y1);
 if (inputs.length >= 2) {
@@ -260,6 +295,7 @@ check(`нагрузка: ${N} снимков подряд`, times.length === N, 
 // ---------- СТОП человеком ----------
 sh('input keyevent 3'); await sleep(500);
 sh(`am start -W -n ${PILOT}/.MainActivity`);
+await scrollTop();
 const stopBtn = await scrollTo(byText('СТОП — прекратить управление'));
 if (stopBtn) tap(stopBtn);
 for (let i = 0; i < 20 && !hub.state.stoppedAt; i++) await sleep(300);
