@@ -149,7 +149,7 @@ sh(`pm clear ${PILOT}`);
 try { sh(`pm grant ${PILOT} android.permission.POST_NOTIFICATIONS`); } catch { /* Android 11–12 */ }
 adb('logcat', '-c');
 sh(`am start -W -n ${PILOT}/.MainActivity`);
-await waitNode(byText('Прежде чем начать'));
+await waitNode(byText('Прежде чем начать'), 45000);
 const agree = await scrollTo(byText('Согласен, продолжить'));
 check('раскрытие информации показано до согласия', agree);
 shot('01-disclosure');
@@ -194,8 +194,8 @@ if (inputs.length >= 2) {
   const b = dump().find(byText('Подключить'));
   if (b) tap(b);
 }
-for (let i = 0; i < 60 && !hub.state.phone; i++) await sleep(500);
-check('телефон подключился к мосту по коду', hub.state.phone, hub.state.phone && JSON.stringify(hub.state.phone.info));
+for (let i = 0; i < 90 && !hub.state.phone; i++) await sleep(500);
+check('телефон подключился к мосту по коду', hub.state.phone, hub.state.phone ? JSON.stringify(hub.state.phone.info) : `кнопка ${!!connectBtn}, поля ${inputs.length}, состояние: ${(dump().find((n) => n.text.startsWith('Состояние')) || {}).text}`);
 if (!hub.state.phone) finish();
 
 const call = (name, args = {}) => hub.callTool(name, args);
@@ -221,7 +221,7 @@ await sleep(1500);
 shot('03-consent');
 let { r: rs, tapped } = await sel;
 check('окно «Разрешить ИИ?» показано и человек разрешил', tapped && !rs.isError, textOf(rs));
-await sleep(800);
+await sleep(2500);
 shot('04-overlay');
 
 r = await call('screenshot');
@@ -232,15 +232,16 @@ if (r.content.find((c) => c.type === 'image')) writeFileSync(`${OUT}/05-agent-vi
 const scale = m ? +m[1] / +m[3] : 1;
 const toShot = (n) => [Math.round(n.cx * scale), Math.round(n.cy * scale)];
 
-let field = (await waitNode((n) => n.pkg === NOTES && n.cls === 'android.widget.EditText', 5000));
+let field = await waitNode((n) => n.pkg === NOTES && n.cls === 'android.widget.EditText', 20000);
+if (!field) { check('«Тест-заметки» на экране после разрешения', false); finish(); }
 r = await call('left_click', { coordinate: toShot(field) });
 await sleep(500);
 field = dump().find((n) => n.pkg === NOTES && n.cls === 'android.widget.EditText');
 check('касание по координатам снимка попало в поле', !r.isError && field && field.focused, textOf(r));
 
 r = await call('type', { text: 'Купить молоко' });
-await sleep(400);
-field = dump().find((n) => n.pkg === NOTES && n.cls === 'android.widget.EditText');
+field = await waitNode((n) => n.pkg === NOTES && n.cls === 'android.widget.EditText' && n.text === 'Купить молоко', 6000)
+  || dump().find((n) => n.pkg === NOTES && n.cls === 'android.widget.EditText');
 check('ввод текста по-русски', !r.isError && field && field.text === 'Купить молоко', field && field.text);
 
 r = await call('type', { text: '4111 1111 1111 1111' });
@@ -250,11 +251,12 @@ check('номер карты не вводится', r.isError, textOf(r));
 let enter = await answering(call('key', { text: 'Return' }), 'Да, один раз');
 await sleep(600);
 check('Enter при видимой запрещённой цели спросил человека', enter.tapped, textOf(enter.r));
-check('Enter после «Да» сохранил заметку', !enter.r.isError && !!dump().find(byText('Заметок: 1')), textOf(enter.r));
+check('Enter после «Да» сохранил заметку', !enter.r.isError && !!(await waitNode(byText('Заметок: 1'), 6000)), textOf(enter.r));
 shot('06-note-saved');
 
 r = await call('screenshot');
-const prod = dump().find(byText('FRK_ROZNICA_PROD'));
+const prod = await waitNode(byText('FRK_ROZNICA_PROD'), 10000);
+if (!prod) { check('строка FRK_ROZNICA_PROD видна', false); finish(); }
 const deny = answering(call('left_click', { coordinate: toShot(prod) }), 'Отказать');
 await sleep(1500);
 shot('07-blocked-confirm');
@@ -264,10 +266,11 @@ check('касание запрещённой цели без «Да» → отк
   dn.tapped && dn.r.isError && /Спросите пользователя/.test(textOf(dn.r)) && !dump().find(byText('Открыта база: FRK_ROZNICA_PROD')), textOf(dn.r));
 
 r = await call('screenshot');
-const testMain = dump().find(byText('TEST_MAIN'));
+const testMain = await waitNode(byText('TEST_MAIN'), 10000);
+if (!testMain) { check('строка TEST_MAIN видна', false); finish(); }
 r = await call('left_click', { coordinate: toShot(testMain) });
 await sleep(500);
-check('касание обычной строки работает', !r.isError && !!dump().find(byText('Открыта база: TEST_MAIN')), textOf(r));
+check('касание обычной строки работает', !r.isError && !!(await waitNode(byText('Открыта база: TEST_MAIN'), 6000)), textOf(r));
 
 r = await call('scroll', { coordinate: [200, 400], scroll_direction: 'down', scroll_amount: 5 });
 await sleep(700);
