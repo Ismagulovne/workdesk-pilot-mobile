@@ -75,6 +75,7 @@ class Link(
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+        android.util.Log.w("Pilot", "связь закрыта: $code $reason, нами=$closedByUs")
         svc.release("связь закрыта")
         onState(
             when (code) {
@@ -86,6 +87,7 @@ class Link(
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+        android.util.Log.w("Pilot", "обрыв связи: ${t.javaClass.simpleName}: ${t.message}, нами=$closedByUs")
         svc.release("обрыв связи")
         if (!closedByUs) onState("нет связи: ${t.message ?: t.javaClass.simpleName}")
     }

@@ -80,6 +80,7 @@ class PilotService : AccessibilityService() {
     }
 
     fun disconnect() {
+        android.util.Log.w("Pilot", "disconnect()", Throwable("кто отключил"))
         link?.close()
         link = null
         release("отключено человеком")
