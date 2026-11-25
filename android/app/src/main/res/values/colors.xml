@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Токены стиля WorkDesk (workdesk.kz, console/public/site.css). Новых цветов не вводить. -->
+<resources>
+    <color name="wd_brand">#4B2BE0</color>
+    <color name="wd_brand_600">#3E20C9</color>
+    <color name="wd_brand_50">#EEEAFD</color>
+    <color name="wd_focus">#FFC53D</color>
+    <color name="wd_bg">#F6F4FE</color>
+    <color name="wd_surface">#FFFFFF</color>
+    <color name="wd_text">#0F0D1A</color>
+    <color name="wd_muted">#5B5873</color>
+    <color name="wd_border">#E6E3F2</color>
+    <color name="wd_link">#4B2BE0</color>
+</resources>

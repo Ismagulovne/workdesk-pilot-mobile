@@ -4,9 +4,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
+import android.view.Window
 import android.widget.LinearLayout
-import android.widget.TextView
 import java.util.concurrent.CompletableFuture
 
 /** Окно согласия на телефоне: доступ к приложению (select_window) и действия с целями из списка запретов. */
@@ -54,19 +53,22 @@ class ConsentActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
         setFinishOnTouchOutside(false)
-        title = intent.getStringExtra(EXTRA_TITLE) ?: "Разрешить ИИ?"
-        val pad = (16 * resources.displayMetrics.density).toInt()
-        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(pad, pad, pad, pad) }
-        root.addView(TextView(this).apply {
-            textSize = 16f
-            text = intent.getStringExtra(EXTRA_TEXT) ?: ""
-        })
-        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, pad, 0, 0) }
-        row.addView(Button(this).apply { text = "Отказать"; setOnClickListener { answer(false) } },
-            LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-        row.addView(Button(this).apply { text = intent.getStringExtra(EXTRA_YES) ?: "Разрешить"; setOnClickListener { answer(true) } },
-            LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        val ui = Ui(this)
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(getColor(R.color.wd_surface))
+            setPadding(ui.dp(20), ui.dp(20), ui.dp(20), ui.dp(16))
+        }
+        root.addView(ui.chip("WorkDesk AI Pilot"))
+        root.addView(ui.heading(intent.getStringExtra(EXTRA_TITLE) ?: "Разрешить ИИ?").apply { setPadding(0, ui.dp(12), 0, ui.dp(4)) })
+        root.addView(ui.body(intent.getStringExtra(EXTRA_TEXT) ?: "", 15f))
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, ui.dp(8), 0, 0) }
+        fun weighted(start: Int) = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            .apply { marginStart = start; topMargin = ui.dp(10) }
+        row.addView(ui.secondary("Отказать") { answer(false) }, weighted(0))
+        row.addView(ui.primary(intent.getStringExtra(EXTRA_YES) ?: "Разрешить") { answer(true) }, weighted(ui.dp(10)))
         root.addView(row)
         setContentView(root)
     }

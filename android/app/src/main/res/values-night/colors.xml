@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Тёмная тема WorkDesk (prefers-color-scheme: dark в site.css). -->
+<resources>
+    <color name="wd_brand_50">#242038</color>
+    <color name="wd_bg">#0F0D1A</color>
+    <color name="wd_surface">#1A1729</color>
+    <color name="wd_text">#EDEBF7</color>
+    <color name="wd_muted">#9C98B5</color>
+    <color name="wd_border">#2D2945</color>
+    <color name="wd_link">#A996FF</color>
+</resources>
