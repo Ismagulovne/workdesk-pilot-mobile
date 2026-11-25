@@ -6,4 +6,4 @@ dependencyResolutionManagement {
     repositories { google(); mavenCentral() }
 }
 rootProject.name = "workdesk-pilot-mobile"
-include(":app")
+include(":app", ":testapp")
