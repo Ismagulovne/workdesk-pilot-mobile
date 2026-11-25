@@ -126,10 +126,12 @@ sh(`settings put secure enabled_accessibility_services ${PILOT}/${PILOT}.PilotSe
 sh('settings put secure accessibility_enabled 1');
 let linkHead = null;
 for (let i = 0; i < 20 && !linkHead; i++) {
+  sh('input keyevent 3'); await sleep(500); // домой и обратно — экран перерисуется в onResume
   sh(`am start -W -n ${PILOT}/.MainActivity`);
   linkHead = await waitNode(byText('2. Подключение к ПК'), 3000);
 }
-check('служба специальных возможностей включилась', linkHead);
+check('служба специальных возможностей включилась', linkHead,
+  sh('dumpsys accessibility').split(/\r?\n/).filter((l) => /pilot|Bound services|Enabled services/i.test(l)).join(' | ').slice(0, 280));
 shot('02-main');
 
 // ---------- список запретов (вводит человек) ----------
@@ -145,6 +147,7 @@ check('список запретов заполнен человеком', saveB
 // ---------- подключение к мосту ----------
 hub = startHub({ port: 8765, host: '0.0.0.0', code: CODE, log: (s) => console.log('[мост]', s) });
 await hub.ready;
+sh('input keyevent 3'); await sleep(500);
 sh(`am start -W -n ${PILOT}/.MainActivity`);
 await sleep(800);
 const connectBtn = await scrollTo(byText('Подключить'));
@@ -255,6 +258,7 @@ const p95 = times.length ? [...times].sort((a, b) => a - b)[Math.floor(times.len
 check(`нагрузка: ${N} снимков подряд`, times.length === N, `среднее ${avg} мс, p95 ${p95} мс`);
 
 // ---------- СТОП человеком ----------
+sh('input keyevent 3'); await sleep(500);
 sh(`am start -W -n ${PILOT}/.MainActivity`);
 const stopBtn = await scrollTo(byText('СТОП — прекратить управление'));
 if (stopBtn) tap(stopBtn);
