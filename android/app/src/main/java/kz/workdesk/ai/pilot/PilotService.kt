@@ -146,7 +146,7 @@ class PilotService : AccessibilityService() {
 
         val stopPi = PendingIntent.getBroadcast(this, 0, Intent(this, StopReceiver::class.java), PendingIntent.FLAG_IMMUTABLE)
         val n = Notification.Builder(this, CHANNEL)
-            .setSmallIcon(R.drawable.ic_stop)
+            .setSmallIcon(R.drawable.ic_stat_logo)
             .setColor(getColor(R.color.wd_brand))
             .setContentTitle("ИИ управляет: $label")
             .setContentText("Нажмите «Стоп», чтобы сразу прекратить")
