@@ -6,7 +6,6 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
-import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -66,19 +65,10 @@ object Consent {
             }
             card.clipToOutline = true
             val scroll = ScrollView(svc).apply { addView(card) }
-            val scrim = object : FrameLayout(svc) {
-                override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-                    if (event.keyCode == KeyEvent.KEYCODE_BACK) {
-                        if (event.action == KeyEvent.ACTION_UP) answer.complete(false)
-                        return true
-                    }
-                    return super.dispatchKeyEvent(event)
-                }
-            }.apply {
+            val scrim = FrameLayout(svc).apply {
                 // Затемнение из токена текста WorkDesk; касание мимо окна ничего не делает.
                 setBackgroundColor((svc.getColor(R.color.wd_text) and 0x00FFFFFF) or (0x99 shl 24))
                 isClickable = true
-                isFocusableInTouchMode = true
                 val side = ui.dp(16)
                 addView(scroll, FrameLayout.LayoutParams(
                     minOf(ui.dp(480), svc.resources.displayMetrics.widthPixels - 2 * side),
@@ -88,12 +78,12 @@ object Consent {
             val lp = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                // Без фокуса: фокус ввода и клавиатура остаются у приложения под окном, касания окно получает.
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 PixelFormat.TRANSLUCENT,
             )
             runCatching { svc.getSystemService(WindowManager::class.java).addView(scrim, lp) }
                 .onFailure { answer.complete(false); return@post }
-            scrim.requestFocus()
             shown = scrim
             E2eProbe.attachOverlay(scrim, svc.packageName, "Consent") { shown === scrim }
         }
