@@ -9,7 +9,7 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * Снимки настоящих экранов приложения (те же функции, что в MainActivity и ConsentActivity),
+ * Снимки настоящих экранов приложения (те же функции, что в MainActivity и окне согласия Consent),
  * чтобы сверить вид со стилем WorkDesk без телефона. Картинки — в артефакте CI.
  */
 abstract class ScreensBase(night: Boolean) {
@@ -39,7 +39,7 @@ abstract class ScreensBase(night: Boolean) {
 
     @Test fun consent() {
         val ctx = paparazzi.context
-        paparazzi.snapshot(consentView(ctx, "Разрешить ИИ?", ConsentActivity.askText("Google Keep"), "Разрешить", {}, {}))
+        paparazzi.snapshot(consentView(ctx, "Разрешить ИИ?", Consent.askText("Google Keep"), "Разрешить", {}, {}))
     }
 
     @Test fun blockedTarget() {

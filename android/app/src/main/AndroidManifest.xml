@@ -30,14 +30,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".ConsentActivity"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:launchMode="singleTask"
-            android:taskAffinity="kz.workdesk.ai.pilot.consent"
-            android:theme="@style/Theme.WorkDesk.Dialog" />
-
         <service
             android:name=".PilotService"
             android:exported="true"

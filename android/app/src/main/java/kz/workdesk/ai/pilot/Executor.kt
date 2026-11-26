@@ -117,8 +117,8 @@ class Executor(private val svc: PilotService) {
         val e = apps.firstOrNull { it.id == id } ?: throw Fail("нет приложения с window_id=$id, вызовите list_windows")
         e.deny?.let { throw Fail(it) }
         val answer = CompletableFuture<Boolean>()
-        ConsentActivity.ask(svc, e.label, answer)
-        val allowed = try { answer.get(90, TimeUnit.SECONDS) } catch (x: Exception) { false }
+        Consent.ask(svc, e.label, answer)
+        val allowed = try { answer.get(90, TimeUnit.SECONDS) } catch (x: Exception) { answer.complete(false); answer.getNow(false) }
         if (!allowed) throw Fail("человек не разрешил управлять «${e.label}». Спросите его, что делать дальше.")
         svc.grant(Target(e.pkg, e.label))
         shot = null
@@ -180,8 +180,8 @@ class Executor(private val svc: PilotService) {
         if (targets.isEmpty()) return
         val hit = Policy.findBlocked(targets, screenTexts(rowY)) ?: return
         val answer = CompletableFuture<Boolean>()
-        ConsentActivity.confirmBlocked(svc, hit, action, answer)
-        val yes = try { answer.get(90, TimeUnit.SECONDS) } catch (x: Exception) { false }
+        Consent.confirmBlocked(svc, hit, action, answer)
+        val yes = try { answer.get(90, TimeUnit.SECONDS) } catch (x: Exception) { answer.complete(false); answer.getNow(false) }
         svc.journal.write("blocked_target", if (yes) "разрешено человеком: $action" else "отказ: $action")
         if (!yes) {
             throw Fail("действие ($action) может открыть «$hit» — это цель из списка запретов пользователя, " +

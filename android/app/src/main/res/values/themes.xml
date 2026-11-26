@@ -12,10 +12,4 @@
         <item name="android:textColorSecondary">@color/wd_muted</item>
         <item name="android:textColorLink">@color/wd_link</item>
     </style>
-    <style name="Theme.WorkDesk.Dialog" parent="@android:style/Theme.Material.Light.Dialog.Alert">
-        <item name="android:colorAccent">@color/wd_brand</item>
-        <item name="android:colorBackground">@color/wd_surface</item>
-        <item name="android:textColorPrimary">@color/wd_text</item>
-        <item name="android:textColorSecondary">@color/wd_muted</item>
-    </style>
 </resources>

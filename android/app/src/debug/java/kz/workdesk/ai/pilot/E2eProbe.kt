@@ -20,23 +20,30 @@ import org.json.JSONObject
 object E2eProbe {
     private var seq = 0
 
-    fun attach(a: Activity) {
-        val root = a.window.decorView
+    fun attach(a: Activity) =
+        attachView(a.window.decorView, a.packageName, a.localClassName, { !a.isDestroyed && !a.isFinishing }, { it.hasWindowFocus() })
+
+    /** Окно-оверлей службы (окно согласия): фокуса ввода у него нет, но оно поверх всех. */
+    fun attachOverlay(root: View, pkg: String, name: String, alive: () -> Boolean) =
+        attachView(root, pkg, name, alive, { true })
+
+    private fun attachView(root: View, pkg: String, name: String, alive: () -> Boolean, focus: (View) -> Boolean) {
         val h = Handler(Looper.getMainLooper())
         // Отчёт каждые 400 мс, пока окно живо: ввод текста не всегда перестраивает экран.
         val tick = object : Runnable {
             override fun run() {
-                if (a.isDestroyed || a.isFinishing) return
-                report(a, root)
+                if (!alive()) return
+                report(pkg, name, root, focus(root))
                 h.postDelayed(this, 400)
             }
         }
         h.postDelayed(tick, 200)
     }
 
-    fun gone(a: Activity) = Log.i("E2E", "${a.packageName}|${a.localClassName}|0|${++seq}|0|1|[]")
+    fun gone(a: Activity) = gone(a.packageName, a.localClassName)
+    fun gone(pkg: String, name: String) = Log.i("E2E", "$pkg|$name|0|${++seq}|0|1|[]")
 
-    private fun report(a: Activity, root: View) {
+    private fun report(pkg: String, name: String, root: View, focused: Boolean) {
         val arr = JSONArray()
         val r = Rect()
         val scr = IntArray(2)
@@ -55,12 +62,12 @@ object E2eProbe {
         walk(root)
         // Строка logcat ограничена ~4 КБ: делим на части по 20 узлов, тест собирает их по номеру отчёта.
         val id = ++seq
-        val f = if (root.hasWindowFocus()) 1 else 0
+        val f = if (focused) 1 else 0
         val parts = maxOf(1, (arr.length() + 19) / 20)
         for (i in 0 until parts) {
             val chunk = JSONArray()
             for (j in i * 20 until minOf(arr.length(), i * 20 + 20)) chunk.put(arr.get(j))
-            Log.i("E2E", "${a.packageName}|${a.localClassName}|$f|$id|$i|$parts|$chunk")
+            Log.i("E2E", "$pkg|$name|$f|$id|$i|$parts|$chunk")
         }
     }
 }

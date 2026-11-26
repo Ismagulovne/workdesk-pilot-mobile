@@ -61,6 +61,7 @@ class PilotService : AccessibilityService() {
     override fun onInterrupt() {}
 
     override fun onDestroy() {
+        Consent.cancel()
         release("служба выключена")
         link?.close()
         instance = null

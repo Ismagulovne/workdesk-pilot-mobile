@@ -134,6 +134,11 @@ async function answering(promise, button) {
 
 const textOf = (r) => r.content.filter((c) => c.type === 'text').map((c) => c.text).join(' ');
 
+function waitBroadcastIdle() {
+  try { execFileSync('adb', ['shell', 'am', 'wait-for-broadcast-idle'], { timeout: 90000, stdio: 'ignore' }); } catch { /* старый Android или тайм-аут */ }
+}
+const serviceBound = () => /Bound services:\{[^}]*WorkDesk AI Pilot/.test(sh('dumpsys accessibility'));
+
 // ---------- подготовка телефона ----------
 const info = {
   device: DEVICE,
@@ -147,6 +152,9 @@ try { sh(`pm grant ${PILOT} android.permission.POST_NOTIFICATIONS`); } catch { /
 sh(`am force-stop ${NOTES}`);
 sh(`pm clear ${PILOT}`);
 try { sh(`pm grant ${PILOT} android.permission.POST_NOTIFICATIONS`); } catch { /* Android 11–12 */ }
+// pm clear = принудительная остановка. На медленном эмуляторе система обрабатывает её с опозданием до 30 с
+// и тогда выключает уже включённую службу посреди прогона (Redmi Note 13, 25.11). Ждём, пока очередь опустеет.
+waitBroadcastIdle();
 adb('logcat', '-c');
 sh(`am start -W -n ${PILOT}/.MainActivity`);
 await waitNode(byText('Прежде чем начать'), 45000);
@@ -179,6 +187,13 @@ if (saveBtn) {
 check('список запретов заполнен человеком', saveBtn);
 
 // ---------- подключение к мосту ----------
+waitBroadcastIdle();
+if (!serviceBound()) {
+  console.log('служба выключилась до подключения — включаем снова');
+  sh(`settings put secure enabled_accessibility_services ${PILOT}/${PILOT}.PilotService`);
+  sh('settings put secure accessibility_enabled 1');
+  for (let i = 0; i < 20 && !serviceBound(); i++) await sleep(500);
+}
 hub = startHub({ port: 8765, host: '0.0.0.0', code: CODE, log: (s) => console.log('[мост]', s) });
 await hub.ready;
 sh('input keyevent 3'); await sleep(500);
