@@ -134,6 +134,11 @@ async function answering(promise, button) {
 
 const textOf = (r) => r.content.filter((c) => c.type === 'text').map((c) => c.text).join(' ');
 
+/** Клавиатура после ввода закрывает строки списка и сбивает датчик E2E; человек бы её тоже убрал. */
+function hideKeyboard() {
+  try { if (/mInputShown=true/.test(sh('dumpsys input_method'))) { sh('input keyevent 111'); pause(600); } } catch { /* нет сведений — не трогаем */ }
+}
+
 function waitBroadcastIdle() {
   try { execFileSync('adb', ['shell', 'am', 'wait-for-broadcast-idle'], { timeout: 90000, stdio: 'ignore' }); } catch { /* старый Android или тайм-аут */ }
 }
@@ -280,6 +285,7 @@ await sleep(500);
 check('касание запрещённой цели без «Да» → отказ «спросите пользователя»',
   dn.tapped && dn.r.isError && /Спросите пользователя/.test(textOf(dn.r)) && !dump().find(byText('Открыта база: FRK_ROZNICA_PROD')), textOf(dn.r));
 
+hideKeyboard();
 r = await call('screenshot');
 const testMain = await waitNode(byText('TEST_MAIN'), 10000);
 if (!testMain) { check('строка TEST_MAIN видна', false); finish(); }
@@ -287,7 +293,8 @@ r = await call('left_click', { coordinate: toShot(testMain) });
 await sleep(500);
 check('касание обычной строки работает', !r.isError && !!(await waitNode(byText('Открыта база: TEST_MAIN'), 6000)), textOf(r));
 
-const before = dump().find((n) => n.pkg === NOTES && /^Строка \d+$/.test(n.text));
+hideKeyboard();
+const before = (await waitNode((n) => n.pkg === NOTES && /^Строка \d+$/.test(n.text), 6000)) || undefined;
 r = await call('scroll', { coordinate: [200, 400], scroll_direction: 'down', scroll_amount: 5 });
 await sleep(1200);
 const after = before && dump().find((n) => n.pkg === NOTES && n.text === before.text);
