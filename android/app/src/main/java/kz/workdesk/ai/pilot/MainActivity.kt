@@ -135,6 +135,79 @@ class MainActivity : Activity() {
             render()
         })
         root.addView(log)
+        root.addView(updatesCard())
+    }
+
+    // ---------- учётная запись WorkDesk и обновления (правила №16, №17, №33) ----------
+
+    private val account by lazy { Account(this) }
+    @Volatile private var busy = false
+
+    private fun updatesCard(): LinearLayout {
+        val card = ui.card()
+        card.addView(ui.heading("Обновления"))
+        val who = account.name
+        card.addView(ui.muted(if (account.token != null) "Вход в WorkDesk: ${who ?: "выполнен"}" else
+            "Обновления выдаются только с workdesk.kz и по допуску к WorkDesk AI. Войдите через Коммит.", 14f))
+        prefs.getString("update_state", null)?.let { card.addView(ui.muted("Состояние: $it", 14f)) }
+        if (account.token == null) {
+            card.addView(ui.primary("Войти через Коммит") { login() })
+        } else {
+            card.addView(ui.primary("Проверить обновления") { checkUpdate() })
+            card.addView(ui.secondary("Выйти из WorkDesk") { bg { account.logout() }; setUpdateState(null) })
+        }
+        card.addView(ui.muted("Нет допуска? Напишите на info@worktime.kz, что и зачем хотите делать через ИИ.", 13f))
+        return card
+    }
+
+    private fun setUpdateState(s: String?) {
+        prefs.edit().apply { if (s == null) remove("update_state") else putString("update_state", s) }.apply()
+        runOnUiThread { if (!isFinishing) render() }
+    }
+
+    private fun bg(work: () -> Unit) {
+        if (busy) return
+        busy = true
+        Thread { try { work() } finally { busy = false } }.start()
+    }
+
+    private fun login() = bg {
+        try {
+            val (url, code) = account.start()
+            runOnUiThread { startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url))) }
+            setUpdateState("ждём вход в браузере…")
+            setUpdateState(if (account.await(code) { isDestroyed }) null else "вход не завершён, попробуйте снова")
+        } catch (e: Exception) {
+            setUpdateState("вход не удался: ${e.message}")
+        }
+    }
+
+    private fun checkUpdate() = bg {
+        val token = account.token ?: return@bg
+        try {
+            setUpdateState("проверяем…")
+            val offer = Updater.check(token)
+            if (offer == null || !Updater.newer(offer.version, Link.VERSION)) {
+                setUpdateState("установлена последняя версия ${Link.VERSION}"); return@bg
+            }
+            if (!Updater.canInstall(this)) {
+                setUpdateState("есть версия ${offer.version}: разрешите установку из этого приложения и нажмите ещё раз")
+                runOnUiThread {
+                    startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, android.net.Uri.parse("package:$packageName")))
+                }
+                return@bg
+            }
+            val file = Updater.download(this, token, offer) { p -> if (p % 10 == 0) setUpdateState("загрузка ${offer.version}: $p%") }
+            setUpdateState("версия ${offer.version} проверена (SHA-256 и подпись WorkDesk), подтвердите установку")
+            PilotService.instance?.journal?.write("update", "проверено и передано установщику: ${offer.version}")
+            Updater.install(this, file)
+        } catch (e: Updater.Unauthorized) {
+            account.forget()
+            setUpdateState("вход истёк или допуск снят — войдите снова")
+        } catch (e: Exception) {
+            PilotService.instance?.journal?.write("update", "отказ: ${e.message}")
+            setUpdateState("не обновлено: ${e.message}")
+        }
     }
 }
 

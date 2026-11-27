@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<!-- Пока переведено только окно согласия; остальной интерфейс на русском. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <string name="app_name">WorkDesk AI Pilot</string>
     <string name="service_label">WorkDesk AI Pilot — управление ИИ</string>
     <string name="tile_label">Стоп ИИ</string>
     <string name="service_summary">ИИ (работает с Claude Code на вашем ПК) видит и нажимает только в приложении, которое вы разрешили. Стоп — кнопка на экране, в уведомлении или плитка «Стоп ИИ».</string>
     <string name="service_description">Служба нужна, чтобы ИИ-помощник выполнял ваши задачи в одном выбранном вами приложении: делала снимок экрана этого приложения, нажимала, прокручивала и вводила текст. Снимки и действия передаются только на ваш компьютер, к которому вы подключили телефон, и оттуда — в Claude (Anthropic) по вашей учетной записи. Пароли, банковские и платежные приложения, менеджеры паролей и системные настройки ИИ недоступны. Остановить можно в любой момент.</string>
+    <!-- Окно согласия: ru (здесь), kk и en в values-kk / values-en -->
+    <string name="consent_ask_title">Разрешить ИИ?</string>
+    <string name="consent_ask_text">ИИ-помощник (работает с Claude Code на вашем компьютере) просит управлять приложением «%1$s».\n\nОн будет видеть экран только этого приложения, нажимать, прокручивать и вводить текст. Пароли, оплату и подтверждения выполняете вы.\n\nОстановить: красная кнопка «СТОП» вверху экрана, кнопка «Стоп» в уведомлении или плитка «Стоп ИИ».</string>
+    <string name="consent_allow">Разрешить</string>
+    <string name="consent_deny">Отказать</string>
+    <string name="consent_blocked_title">Открыть «%1$s»?</string>
+    <string name="consent_blocked_text">ИИ хочет выполнить действие (%1$s), которое может открыть «%2$s».\n\nЭта цель в вашем списке запретов. Разрешайте, только если вы сами просили это сделать.</string>
+    <string name="consent_yes_once">Да, один раз</string>
 </resources>

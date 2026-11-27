@@ -13,8 +13,8 @@ android {
         applicationId = "kz.workdesk.ai.pilot"
         minSdk = 30 // AccessibilityService.takeScreenshot
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
     }
 
     // Подпись релиза: ключ из таблицы секретов, в CI — секреты PILOT_KEYSTORE_*. Без них релиз не подписывается.
@@ -47,4 +47,5 @@ android {
 dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303") // настоящий org.json вместо заглушки android.jar
 }

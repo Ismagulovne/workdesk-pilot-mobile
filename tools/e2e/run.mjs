@@ -125,7 +125,8 @@ async function answering(promise, button) {
   let tapped = false;
   promise.finally(() => { done = true; });
   while (!done) {
-    const n = dump().find((x) => x.pkg === PILOT && x.text === button);
+    const names = [].concat(button);
+    const n = dump().find((x) => x.pkg === PILOT && names.includes(x.text));
     if (n && !tapped) { await sleep(300); tap(n); tapped = true; }
     await sleep(400);
   }
@@ -236,7 +237,7 @@ if (settingsApp) {
 }
 
 sh(`am start -W -n ${NOTES}/.NotesActivity`);
-const sel = answering(call('select_window', { window_id: notesApp.window_id }), 'Разрешить');
+const sel = answering(call('select_window', { window_id: notesApp.window_id }), ['Разрешить', 'Allow', 'Рұқсат беру']);
 await sleep(1500);
 shot('03-consent');
 let { r: rs, tapped } = await sel;
@@ -268,7 +269,7 @@ r = await call('type', { text: '4111 1111 1111 1111' });
 check('номер карты не вводится', r.isError, textOf(r));
 
 // Enter, пока на экране видна цель из списка запретов, — только после «Да» человека.
-let enter = await answering(call('key', { text: 'Return' }), 'Да, один раз');
+let enter = await answering(call('key', { text: 'Return' }), ['Да, один раз', 'Yes, once', 'Иә, бір рет']);
 await sleep(600);
 check('Enter при видимой запрещённой цели спросил человека', enter.tapped, textOf(enter.r));
 check('Enter после «Да» сохранил заметку', !enter.r.isError && !!(await waitNode(byText('Заметок: 1'), 6000)), textOf(enter.r));
@@ -277,7 +278,7 @@ shot('06-note-saved');
 r = await call('screenshot');
 const prod = await waitNode(byText('FRK_ROZNICA_PROD'), 10000);
 if (!prod) { check('строка FRK_ROZNICA_PROD видна', false); finish(); }
-const deny = answering(call('left_click', { coordinate: toShot(prod) }), 'Отказать');
+const deny = answering(call('left_click', { coordinate: toShot(prod) }), ['Отказать', 'Deny', 'Бас тарту']);
 await sleep(1500);
 shot('07-blocked-confirm');
 const dn = await deny;

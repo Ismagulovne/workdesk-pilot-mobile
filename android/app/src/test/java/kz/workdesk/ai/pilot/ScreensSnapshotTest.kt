@@ -39,7 +39,7 @@ abstract class ScreensBase(night: Boolean) {
 
     @Test fun consent() {
         val ctx = paparazzi.context
-        paparazzi.snapshot(consentView(ctx, "Разрешить ИИ?", Consent.askText("Google Keep"), "Разрешить", {}, {}))
+        paparazzi.snapshot(consentView(ctx, ctx.getString(R.string.consent_ask_title), Consent.askText(ctx, "Google Keep"), ctx.getString(R.string.consent_allow), {}, {}))
     }
 
     @Test fun blockedTarget() {

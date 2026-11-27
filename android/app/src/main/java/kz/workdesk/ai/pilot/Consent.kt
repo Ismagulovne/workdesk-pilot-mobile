@@ -28,22 +28,18 @@ object Consent {
     @Volatile private var pending: CompletableFuture<Boolean>? = null
     private var shown: View? = null
 
-    /** Разрешение управлять приложением. */
-    fun ask(svc: PilotService, label: String, answer: CompletableFuture<Boolean>) =
-        show(svc, "Разрешить ИИ?", askText(label), "Разрешить", answer)
+    /** Разрешение управлять приложением. Тексты — ru/kk/en по языку телефона (res/values*). */
+    fun ask(svc: PilotService, label: String, answer: CompletableFuture<Boolean>) = show(
+        svc, svc.getString(R.string.consent_ask_title), askText(svc, label), svc.getString(R.string.consent_allow), answer,
+    )
 
-    internal fun askText(label: String) =
-        "ИИ-помощник (работает с Claude Code на вашем компьютере) просит управлять приложением «$label».\n\n" +
-            "Он будет видеть экран только этого приложения, нажимать, прокручивать и вводить текст. " +
-            "Пароли, оплату и подтверждения выполняете вы.\n\n" +
-            "Остановить: красная кнопка «СТОП» вверху экрана, кнопка «Стоп» в уведомлении или плитка «Стоп ИИ»."
+    internal fun askText(ctx: Context, label: String) = ctx.getString(R.string.consent_ask_text, label)
 
     /** Подтверждение одного действия, которое может открыть цель из списка запретов пользователя. */
     fun confirmBlocked(svc: PilotService, target: String, action: String, answer: CompletableFuture<Boolean>) = show(
-        svc, "Открыть «$target»?",
-        "ИИ хочет выполнить действие ($action), которое может открыть «$target».\n\n" +
-            "Эта цель в вашем списке запретов. Разрешайте, только если вы сами просили это сделать.",
-        "Да, один раз", answer,
+        svc, svc.getString(R.string.consent_blocked_title, target),
+        svc.getString(R.string.consent_blocked_text, action, target),
+        svc.getString(R.string.consent_yes_once), answer,
     )
 
     /** Служба выключается — открытый вопрос считается отказом. */
@@ -121,7 +117,7 @@ internal fun consentView(ctx: Context, title: String, text: String, yes: String,
     val row = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, ui.dp(8), 0, 0) }
     fun weighted(start: Int) = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
         .apply { marginStart = start; topMargin = ui.dp(10) }
-    row.addView(ui.secondary("Отказать", onDeny), weighted(0))
+    row.addView(ui.secondary(ctx.getString(R.string.consent_deny), onDeny), weighted(0))
     row.addView(ui.primary(yes, onAllow), weighted(ui.dp(10)))
     root.addView(row)
     return root

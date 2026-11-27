@@ -3,6 +3,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Обновление вне Play со своего сервера с проверкой подписи (правила №14, №16) -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- Список приложений для выбора (Android 11+ видимость пакетов) -->
     <queries>
@@ -29,6 +31,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".UpdateStatusReceiver"
+            android:exported="false" />
 
         <service
             android:name=".PilotService"

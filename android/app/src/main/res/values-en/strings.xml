@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="consent_ask_title">Allow AI?</string>
+    <string name="consent_ask_text">The AI assistant (working with Claude Code on your computer) asks to control the app “%1$s”.\n\nIt will see the screen of this app only, tap, scroll and type text. You enter passwords, payments and confirmations yourself.\n\nTo stop: the red “STOP” button at the top of the screen, “Stop” in the notification or the “Stop AI” tile.</string>
+    <string name="consent_allow">Allow</string>
+    <string name="consent_deny">Deny</string>
+    <string name="consent_blocked_title">Open “%1$s”?</string>
+    <string name="consent_blocked_text">The AI wants to perform an action (%1$s) that may open “%2$s”.\n\nThis target is on your block list. Allow only if you asked for it yourself.</string>
+    <string name="consent_yes_once">Yes, once</string>
+</resources>

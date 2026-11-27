@@ -20,7 +20,7 @@ class Link(
     private val code: String,
     private val onState: (String) -> Unit,
 ) : WebSocketListener() {
-    companion object { const val PROTO = 1; const val VERSION = "0.1.0" }
+    companion object { const val PROTO = 1; const val VERSION = "0.2.0" }
 
     private val client = OkHttpClient.Builder().pingInterval(20, TimeUnit.SECONDS).build()
     private val worker = Executors.newSingleThreadExecutor()

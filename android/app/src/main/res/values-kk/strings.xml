@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="consent_ask_title">ЖИ-ге рұқсат беру керек пе?</string>
+    <string name="consent_ask_text">ЖИ-көмекші (компьютеріңіздегі Claude Code-пен жұмыс істейді) «%1$s» қолданбасын басқаруға рұқсат сұрайды.\n\nОл тек осы қолданбаның экранын көреді, басады, айналдырады және мәтін енгізеді. Құпиясөздерді, төлемдерді және растауларды өзіңіз орындайсыз.\n\nТоқтату: экранның жоғарғы жағындағы қызыл «СТОП» батырмасы, хабарландырудағы «Стоп» батырмасы немесе «ЖИ-ді тоқтату» тақтайшасы.</string>
+    <string name="consent_allow">Рұқсат беру</string>
+    <string name="consent_deny">Бас тарту</string>
+    <string name="consent_blocked_title">«%1$s» ашылсын ба?</string>
+    <string name="consent_blocked_text">ЖИ «%2$s» ашуы мүмкін әрекетті (%1$s) орындағысы келеді.\n\nБұл мақсат сіздің тыйым тізіміңізде. Мұны өзіңіз сұраған жағдайда ғана рұқсат етіңіз.</string>
+    <string name="consent_yes_once">Иә, бір рет</string>
+</resources>
